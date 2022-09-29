@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  balance      Balance[]
+  inAndOut     InAndOut[]
+}
+
+model Balance {
+  id     String   @id @default(cuid())
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  amount Int      @default(0)
+  date   DateTime @default(now()) @db.Date
+}
+
+enum InAndOutType {
+  expense
+  income
+}
+
+model InAndOut {
+  id          String       @id @default(cuid())
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  parent      InAndOut?    @relation("ParentChild", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId    String?
+  name        String
+  type        InAndOutType
+  amount      Int?
+  description String
+  date        DateTime     @default(now())
+  children    InAndOut[]   @relation("ParentChild")
+}
