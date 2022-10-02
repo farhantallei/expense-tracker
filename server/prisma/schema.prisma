@@ -42,6 +42,9 @@ model InAndOut {
   type        InAndOutType
   amount      Int?
   description String
-  date        DateTime     @default(now())
+  date        Int          @db.SmallInt
+  month       Int          @db.SmallInt
+  year        Int          @db.SmallInt
+  createdAt   DateTime     @default(now()) @db.Time()
   children    InAndOut[]   @relation("ParentChild")
 }

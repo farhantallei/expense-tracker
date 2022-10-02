@@ -23,6 +23,32 @@ import { useAuthContext } from '../context/AuthContext';
 function Dashboard() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const moduloMonth = useMemo((): number => {
+    const modMonth = ((currentMonth % 12) + 12) % 12;
+    if (modMonth === 0) return 12;
+    return modMonth;
+  }, [currentMonth]);
+  const totalWeek = useMemo((): number => {
+    if (
+      currentMonth === new Date().getMonth() + 1 &&
+      currentYear === new Date().getFullYear()
+    ) {
+      const currentDate = new Date().getDate();
+      return Math.ceil(currentDate / 7);
+    }
+    return Math.ceil(getDaysInMonth(currentYear, currentMonth) / 7);
+  }, [currentYear, currentMonth]);
+  const [currentWeek, setCurrentWeek] = useState(totalWeek);
+  const totalDays = useMemo((): number => {
+    if (currentMonth === new Date().getMonth() + 1) {
+      const currentDate = new Date().getDate();
+      if (currentDate / 7 < 1) return currentDate % 7;
+      return 7;
+    }
+    if (getDaysInMonth(currentYear, currentMonth) / currentWeek < 7)
+      return getDaysInMonth(currentYear, currentMonth) % 7;
+    return 7;
+  }, [currentYear, currentMonth, currentWeek]);
   const {
     isOpen: isInAndOutModalOpen,
     onOpen: onInAndOutModalOpen,
@@ -30,14 +56,6 @@ function Dashboard() {
   } = useDisclosure();
   const { account, setIsAuthenticated, setAccount } = useAuthContext();
   const navigate = useNavigate();
-  const totalWeek = useMemo((): number => {
-    if (currentMonth === new Date().getMonth() + 1) {
-      const currentDate = new Date().getDate();
-      return Math.ceil(currentDate / 7);
-    }
-    return Math.ceil(getDaysInMonth(currentYear, currentMonth) / 7);
-  }, [currentYear, currentMonth]);
-  const [currentWeek, setCurrentWeek] = useState(totalWeek);
 
   useEffect(() => {
     if (
@@ -78,11 +96,8 @@ function Dashboard() {
         alignItems="center">
         <IconButton
           onClick={() => {
-            setCurrentMonth((prevMonth) => {
-              if (prevMonth > 0) return prevMonth - 1;
-              setCurrentYear((prevYear) => prevYear - 1);
-              return 11;
-            });
+            if (moduloMonth === 1) setCurrentYear((prevYear) => prevYear - 1);
+            setCurrentMonth((prevMonth) => prevMonth - 1);
           }}
           size="sm"
           variant="outline"
@@ -90,15 +105,12 @@ function Dashboard() {
           icon={<ChevronLeftIcon />}
         />
         <Heading size="md" justifySelf="center" fontWeight="semibold">
-          {formatDatePagination(new Date(currentYear, currentMonth, 0))}
+          {formatDatePagination(new Date(currentYear, moduloMonth, 0))}
         </Heading>
         <IconButton
           onClick={() => {
-            setCurrentMonth((prevMonth) => {
-              if (prevMonth < 12) return prevMonth + 1;
-              setCurrentYear((prevYear) => prevYear + 1);
-              return 0;
-            });
+            if (moduloMonth === 12) setCurrentYear((prevYear) => prevYear + 1);
+            setCurrentMonth((prevMonth) => prevMonth + 1);
           }}
           disabled={
             currentYear === new Date().getFullYear() &&
@@ -118,6 +130,7 @@ function Dashboard() {
         <ButtonGroup size="sm" isAttached variant="outline">
           {[...Array(totalWeek)].map((x, i) => (
             <Button
+              key={i}
               isActive={i + 1 === currentWeek}
               onClick={() => setCurrentWeek(i + 1)}>
               {i + 1}
@@ -168,15 +181,15 @@ function Dashboard() {
       </Flex>
       {/* List */}
       <InAndOutList>
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
-        <InAndOutList.Item onView={onInAndOutModalOpen} />
+        {[...Array(totalDays)].map((x, i) => (
+          <InAndOutList.Item
+            key={i}
+            date={(currentWeek - 1) * 7 + (i + 1)}
+            month={moduloMonth}
+            year={currentYear}
+            onView={onInAndOutModalOpen}
+          />
+        ))}
       </InAndOutList>
       <InAndOutModal
         isOpen={isInAndOutModalOpen}

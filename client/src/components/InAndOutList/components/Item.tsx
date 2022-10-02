@@ -13,10 +13,13 @@ import {
 } from '@chakra-ui/react';
 
 interface ItemProps {
+  date: number;
+  month: number;
+  year: number;
   onView?: () => void;
 }
 
-function Item({ onView }: ItemProps) {
+function Item({ date, month, year, onView }: ItemProps) {
   return (
     <Flex direction="column" borderWidth="1px" borderRadius="lg" p={4} gap={8}>
       <Flex alignItems="flex-start">
@@ -27,7 +30,7 @@ function Item({ onView }: ItemProps) {
           fontSize="1em"
           fontWeight="semibold"
           borderRadius="md">
-          <Center>1</Center>
+          <Center>{date}</Center>
         </Box>
         <Spacer />
         <Flex gap={2}>
@@ -68,7 +71,7 @@ function Item({ onView }: ItemProps) {
         </Stat>
       </Flex>
       <Flex alignItems="flex-end">
-        <Text color="gray.400">1/9/2022</Text>
+        <Text color="gray.400">{`${date}/${month}/${year}`}</Text>
         <Spacer />
         <ButtonGroup gap={0.5}>
           <Button size="sm" colorScheme="green">
