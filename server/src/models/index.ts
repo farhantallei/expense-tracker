@@ -16,16 +16,20 @@ export const UserModel = {
 
 export const BalanceModel = {
   validation: {
-    id: Type.RegEx(/^c[^\s-]{8,}$/),
     userId: Type.RegEx(/^c[^\s-]{8,}$/),
     amount: Type.Integer({ minimum: 0 }),
-    date: Type.Optional(Type.String({ format: 'date' })),
+    year: Type.Integer({ minimum: 1970 }),
+    month: Type.Integer({ minimum: 1, maximum: 12 }),
+    date: Type.Integer({ minimum: 1, maximum: 31 }),
+    createdAt: Type.Optional(Type.String({ format: 'time' })),
   },
   response: {
-    id: Type.String(),
     userId: Type.String(),
     amount: Type.Integer(),
+    year: Type.Integer(),
+    month: Type.Integer(),
     date: Type.Integer(),
+    createdAt: Type.Integer(),
   },
 };
 
@@ -37,10 +41,12 @@ export const InAndOutModel = {
     name: Type.String({ minLength: 1 }),
     type: Type.Union([Type.Literal('expense'), Type.Literal('income')]),
     amount: Type.Optional(Type.Integer({ minimum: 0 })),
-    description: Type.String({ minLength: 1 }),
-    date: Type.Integer({ minimum: 1, maximum: 31 }),
-    month: Type.Integer({ minimum: 1, maximum: 12 }),
+    description: Type.Optional(Type.String({ minLength: 1 })),
+    totalDays: Type.Integer({ minimum: 1, maximum: 7 }),
     year: Type.Integer({ minimum: 1970 }),
+    month: Type.Integer({ minimum: 1, maximum: 12 }),
+    week: Type.Integer({ minimum: 1, maximum: 5 }),
+    date: Type.Integer({ minimum: 1, maximum: 31 }),
     createdAt: Type.Optional(Type.String({ format: 'time' })),
   },
   response: {
@@ -51,9 +57,9 @@ export const InAndOutModel = {
     type: Type.String(),
     amount: Type.Union([Type.Integer(), Type.Null()]),
     description: Type.String(),
-    date: Type.Integer(),
-    month: Type.Integer(),
     year: Type.Integer(),
+    month: Type.Integer(),
+    date: Type.Integer(),
     createdAt: Type.Integer(),
   },
 };

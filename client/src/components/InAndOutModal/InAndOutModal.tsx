@@ -16,9 +16,10 @@ import { Item } from './components';
 interface InAndOutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBalance?: () => void;
 }
 
-function InAndOutModal({ isOpen, onClose }: InAndOutModalProps) {
+function InAndOutModal({ isOpen, onClose, onBalance }: InAndOutModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
@@ -53,7 +54,9 @@ function InAndOutModal({ isOpen, onClose }: InAndOutModalProps) {
           <Item />
         </ModalBody>
         <ModalFooter borderTopWidth="1px">
-          <Button colorScheme="orange">Balance</Button>
+          <Button colorScheme="orange" onClick={onBalance}>
+            Balance
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

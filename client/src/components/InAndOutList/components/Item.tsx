@@ -16,10 +16,23 @@ interface ItemProps {
   date: number;
   month: number;
   year: number;
+  balance: number;
+  income: number;
+  expense: number;
+  onBalance?: () => void;
   onView?: () => void;
 }
 
-function Item({ date, month, year, onView }: ItemProps) {
+function Item({
+  date,
+  month,
+  year,
+  balance,
+  income,
+  expense,
+  onBalance,
+  onView,
+}: ItemProps) {
   return (
     <Flex direction="column" borderWidth="1px" borderRadius="lg" p={4} gap={8}>
       <Flex alignItems="flex-start">
@@ -40,33 +53,33 @@ function Item({ date, month, year, onView }: ItemProps) {
       </Flex>
       <Flex alignItems="center">
         <Stat>
-          <StatLabel>Balance</StatLabel>
-          <StatNumber color="orange.400" fontSize="xl">
-            Rp 70.000
+          <StatLabel>Calculation</StatLabel>
+          <StatNumber color="gray.500" fontSize="xl">
+            {`Rp ${income - expense}`}
           </StatNumber>
         </Stat>
         <Stat>
-          <StatLabel>Available</StatLabel>
-          <StatNumber color="gray.500" fontSize="xl">
-            Rp 100.000
+          <StatLabel>Balance</StatLabel>
+          <StatNumber color="orange.500" fontSize="xl">
+            {`Rp ${balance}`}
           </StatNumber>
         </Stat>
         <Stat>
           <StatLabel>Loss</StatLabel>
           <StatNumber color="red.500" fontSize="xl">
-            Rp 100.000
+            {`Rp ${income - expense - balance}`}
           </StatNumber>
         </Stat>
         <Stat>
           <StatLabel>Income</StatLabel>
           <StatNumber color="whatsapp.500" fontSize="xl">
-            Rp 100.000
+            {`Rp ${income}`}
           </StatNumber>
         </Stat>
         <Stat>
           <StatLabel>Expense</StatLabel>
           <StatNumber color="red.500" fontSize="xl">
-            Rp 100.000
+            {`Rp ${expense}`}
           </StatNumber>
         </Stat>
       </Flex>
@@ -80,11 +93,11 @@ function Item({ date, month, year, onView }: ItemProps) {
           <Button size="sm" colorScheme="red">
             Expense
           </Button>
+          <Button size="sm" colorScheme="orange" onClick={onBalance}>
+            Balance
+          </Button>
           <Button size="sm" colorScheme="blue" onClick={onView}>
             View
-          </Button>
-          <Button size="sm" colorScheme="orange">
-            Balance
           </Button>
         </ButtonGroup>
       </Flex>

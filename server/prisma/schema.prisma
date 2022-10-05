@@ -20,11 +20,15 @@ model User {
 }
 
 model Balance {
-  id     String   @id @default(cuid())
-  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-  amount Int      @default(0)
-  date   DateTime @default(now()) @db.Date
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  amount    Int      @default(0)
+  year      Int      @db.SmallInt
+  month     Int      @db.SmallInt
+  date      Int      @db.SmallInt
+  createdAt DateTime @default(now()) @db.Time()
+
+  @@id([userId, year, month, date])
 }
 
 enum InAndOutType {
@@ -42,9 +46,11 @@ model InAndOut {
   type        InAndOutType
   amount      Int?
   description String
-  date        Int          @db.SmallInt
-  month       Int          @db.SmallInt
   year        Int          @db.SmallInt
+  month       Int          @db.SmallInt
+  date        Int          @db.SmallInt
   createdAt   DateTime     @default(now()) @db.Time()
   children    InAndOut[]   @relation("ParentChild")
+
+  @@index([userId, year, month, date])
 }
