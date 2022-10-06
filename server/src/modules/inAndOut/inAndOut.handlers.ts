@@ -61,16 +61,8 @@ export const CreateInAndOutHandler: RouteHandlerTypebox<
   CreateInAndOutTSchema
 > = async (request, reply) => {
   const { userId } = request.query;
-  const {
-    parentId,
-    name,
-    type,
-    amount,
-    description = '',
-    year,
-    month,
-    date,
-  } = request.body;
+  const { parentId, name, type, amount, description, year, month, date } =
+    request.body;
 
   return await createInAndOut(reply, {
     userId,

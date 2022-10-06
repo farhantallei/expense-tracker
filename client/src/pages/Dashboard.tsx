@@ -8,25 +8,29 @@ import {
   Grid,
   Heading,
   IconButton,
-  Skeleton,
   Spacer,
-  Stat,
-  StatLabel,
-  StatNumber,
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InAndOutList, InAndOutModal, InputBalanceModal } from '../components';
+import {
+  InAndOutList,
+  InAndOutModal,
+  InputBalanceModal,
+  InputIncomeModal,
+  MoneyStatus,
+} from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useInAndOutList } from '../hooks';
+import { GetInAndOutListResponse } from '../services/inAndOut';
 import { range } from '../utils';
 
 function Dashboard() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentDate, setCurrentDate] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(0);
   const moduloMonth = useMemo((): number => {
     const modMonth = ((currentMonth % 12) + 12) % 12;
     if (modMonth === 0) return 12;
@@ -63,6 +67,11 @@ function Dashboard() {
     onOpen: onInputBalanceModalOpen,
     onClose: onInputBalanceModalClose,
   } = useDisclosure();
+  const {
+    isOpen: isInputIncomeModalOpen,
+    onOpen: onInputIncomeModalOpen,
+    onClose: onInputIncomeModalClose,
+  } = useDisclosure();
   const { account, setIsAuthenticated, setAccount } = useAuthContext();
   const navigate = useNavigate();
 
@@ -71,6 +80,23 @@ function Dashboard() {
     currentYear,
     moduloMonth,
     currentWeek
+  );
+
+  const totalBalance = useMemo(
+    (): number =>
+      data?.reduce((currentTotal, item) => item.balance + currentTotal, 0) || 0,
+    [data, isLoading, currentMonth]
+  );
+
+  const totalLoss = useMemo(
+    (): number =>
+      data?.reduce(
+        (currentTotal, item) =>
+          Math.max((item.income - item.expense - item.balance) * -1, 0) +
+          currentTotal,
+        0
+      ) || 0,
+    [data, isLoading, currentMonth]
   );
 
   const totalIncome = useMemo(
@@ -85,12 +111,6 @@ function Dashboard() {
     [data, isLoading, currentMonth]
   );
 
-  const totalBalance = useMemo(
-    (): number =>
-      data?.reduce((currentTotal, item) => item.balance + currentTotal, 0) || 0,
-    [data, isLoading, currentMonth]
-  );
-
   useEffect(() => {
     if (
       currentYear === new Date().getFullYear() &&
@@ -99,6 +119,11 @@ function Dashboard() {
       return setCurrentWeek(totalWeek);
     setCurrentWeek(1);
   }, [currentYear, currentMonth]);
+
+  function setValue(item: GetInAndOutListResponse) {
+    setCurrentDate(item.date);
+    setCurrentBalance(item.balance);
+  }
 
   function logout() {
     setAccount(null);
@@ -182,46 +207,13 @@ function Dashboard() {
         paddingBottom={4}
         zIndex={10}
         borderBottomWidth="1px">
-        <Stat>
-          <StatLabel>Calculation</StatLabel>
-          <StatNumber color="gray.500" fontSize="xl">
-            <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-              {`Rp ${totalIncome - totalExpense}`}
-            </Skeleton>
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Balance</StatLabel>
-          <StatNumber color="orange.400" fontSize="xl">
-            <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-              {`Rp ${totalBalance}`}
-            </Skeleton>
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Loss</StatLabel>
-          <StatNumber color="red.500" fontSize="xl">
-            <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-              {`Rp ${totalIncome - totalExpense - totalBalance}`}
-            </Skeleton>
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Income</StatLabel>
-          <StatNumber color="whatsapp.500" fontSize="xl">
-            <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-              {`Rp ${totalIncome}`}
-            </Skeleton>
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Expense</StatLabel>
-          <StatNumber color="red.500" fontSize="xl">
-            <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-              {`Rp ${totalExpense}`}
-            </Skeleton>
-          </StatNumber>
-        </Stat>
+        <MoneyStatus
+          balance={totalBalance}
+          loss={totalLoss}
+          income={totalIncome}
+          expense={totalExpense}
+          isLoading={isLoading}
+        />
       </Flex>
       {/* List */}
       <InAndOutList isLoading={isLoading} isError={isError} error={error}>
@@ -235,12 +227,16 @@ function Dashboard() {
                 balance={item.balance}
                 income={item.income}
                 expense={item.expense}
+                onIncome={() => {
+                  setValue(item);
+                  onInputIncomeModalOpen();
+                }}
                 onBalance={() => {
-                  setCurrentDate(item.date);
+                  setValue(item);
                   onInputBalanceModalOpen();
                 }}
                 onView={() => {
-                  setCurrentDate(item.date);
+                  setValue(item);
                   onInAndOutModalOpen();
                 }}
               />
@@ -250,11 +246,24 @@ function Dashboard() {
       <InAndOutModal
         isOpen={isInAndOutModalOpen}
         onClose={onInAndOutModalClose}
+        year={currentYear}
+        month={moduloMonth}
+        week={currentWeek}
+        date={currentDate}
         onBalance={onInputBalanceModalOpen}
       />
       <InputBalanceModal
         isOpen={isInputBalanceModalOpen}
         onClose={onInputBalanceModalClose}
+        year={currentYear}
+        month={moduloMonth}
+        week={currentWeek}
+        date={currentDate}
+        balance={currentBalance}
+      />
+      <InputIncomeModal
+        isOpen={isInputIncomeModalOpen}
+        onClose={onInputIncomeModalClose}
         year={currentYear}
         month={moduloMonth}
         week={currentWeek}

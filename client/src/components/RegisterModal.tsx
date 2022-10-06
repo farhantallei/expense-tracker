@@ -13,8 +13,8 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../hooks';
-import { AuthRequest } from '../../services/auth';
+import { useAuth } from '../hooks';
+import { AuthRequest } from '../services/auth';
 
 interface RegisterModalProps {
   isOpen: boolean;

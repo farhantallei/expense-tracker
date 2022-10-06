@@ -6,11 +6,9 @@ import {
   Center,
   Flex,
   Spacer,
-  Stat,
-  StatLabel,
-  StatNumber,
   Text,
 } from '@chakra-ui/react';
+import MoneyStatus from '../../MoneyStatus';
 
 interface ItemProps {
   date: number;
@@ -19,6 +17,7 @@ interface ItemProps {
   balance: number;
   income: number;
   expense: number;
+  onIncome?: () => void;
   onBalance?: () => void;
   onView?: () => void;
 }
@@ -30,6 +29,7 @@ function Item({
   balance,
   income,
   expense,
+  onIncome,
   onBalance,
   onView,
 }: ItemProps) {
@@ -47,47 +47,23 @@ function Item({
         </Box>
         <Spacer />
         <Flex gap={2}>
-          <Badge colorScheme="green">Income</Badge>
-          <Badge colorScheme="red">Expense</Badge>
+          {income ? <Badge colorScheme="green">Income</Badge> : null}
+          {expense ? <Badge colorScheme="red">Expense</Badge> : null}
         </Flex>
       </Flex>
       <Flex alignItems="center">
-        <Stat>
-          <StatLabel>Calculation</StatLabel>
-          <StatNumber color="gray.500" fontSize="xl">
-            {`Rp ${income - expense}`}
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Balance</StatLabel>
-          <StatNumber color="orange.500" fontSize="xl">
-            {`Rp ${balance}`}
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Loss</StatLabel>
-          <StatNumber color="red.500" fontSize="xl">
-            {`Rp ${income - expense - balance}`}
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Income</StatLabel>
-          <StatNumber color="whatsapp.500" fontSize="xl">
-            {`Rp ${income}`}
-          </StatNumber>
-        </Stat>
-        <Stat>
-          <StatLabel>Expense</StatLabel>
-          <StatNumber color="red.500" fontSize="xl">
-            {`Rp ${expense}`}
-          </StatNumber>
-        </Stat>
+        <MoneyStatus
+          balance={balance}
+          loss={Math.max((income - expense - balance) * -1, 0)}
+          income={income}
+          expense={expense}
+        />
       </Flex>
       <Flex alignItems="flex-end">
         <Text color="gray.400">{`${date}/${month}/${year}`}</Text>
         <Spacer />
         <ButtonGroup gap={0.5}>
-          <Button size="sm" colorScheme="green">
+          <Button size="sm" colorScheme="green" onClick={onIncome}>
             Income
           </Button>
           <Button size="sm" colorScheme="red">

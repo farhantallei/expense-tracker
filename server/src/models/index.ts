@@ -41,7 +41,7 @@ export const InAndOutModel = {
     name: Type.String({ minLength: 1 }),
     type: Type.Union([Type.Literal('expense'), Type.Literal('income')]),
     amount: Type.Optional(Type.Integer({ minimum: 0 })),
-    description: Type.Optional(Type.String({ minLength: 1 })),
+    description: Type.String(),
     totalDays: Type.Integer({ minimum: 1, maximum: 7 }),
     year: Type.Integer({ minimum: 1970 }),
     month: Type.Integer({ minimum: 1, maximum: 12 }),

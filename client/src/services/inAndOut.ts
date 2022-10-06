@@ -47,11 +47,11 @@ export interface GetInAndOutByDateRequest {
 
 export interface CreateInAndOutRequest {
   userId?: string;
-  parentId: string | null;
+  parentId?: string;
   name: string;
   type: 'expense' | 'income';
   amount: number;
-  description: string;
+  description?: string;
   year: number;
   month: number;
   date: number;

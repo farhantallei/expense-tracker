@@ -1,31 +1,37 @@
 import { useToast } from '@chakra-ui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UseFormResetField } from 'react-hook-form';
-import { inputBalance } from '../services/inAndOut';
+import { createInAndOut } from '../services/inAndOut';
 
-interface InputBalanceParams {
+interface InputIncomeParams {
   year: number;
   month: number;
   week: number;
   onClose: () => void;
-  resetField: UseFormResetField<{ amount: number }>;
+  resetField: UseFormResetField<{
+    name: string;
+    amount: number;
+    description: string;
+  }>;
 }
 
-function useInputBalance({
+function useInputIncome({
   year,
   month,
   week,
   onClose,
   resetField,
-}: InputBalanceParams) {
+}: InputIncomeParams) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: inputBalance,
+    mutationFn: createInAndOut,
     onSuccess: () => {
       onClose();
+      resetField('name');
       resetField('amount');
+      resetField('description');
     },
     onError: (error) => {
       error instanceof Error &&
@@ -44,4 +50,4 @@ function useInputBalance({
   });
 }
 
-export default useInputBalance;
+export default useInputIncome;

@@ -16,10 +16,10 @@ import {
   NumberInputField,
   NumberInputStepper,
 } from '@chakra-ui/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuthContext } from '../../context/AuthContext';
-import { useInputBalance } from '../../hooks';
+import { useAuthContext } from '../context/AuthContext';
+import { useInputBalance } from '../hooks';
 
 interface InputBalanceModalProps {
   isOpen: boolean;
@@ -28,6 +28,7 @@ interface InputBalanceModalProps {
   month: number;
   week: number;
   date: number;
+  balance?: number;
 }
 
 interface InputBalanceForm {
@@ -41,8 +42,8 @@ function InputBalanceModal({
   month,
   week,
   date,
+  balance = 0,
 }: InputBalanceModalProps) {
-  const [errorMessage, setErrorMessage] = useState('');
   const initialRef = useRef<HTMLInputElement | null>(null);
   const {
     register,
@@ -50,7 +51,6 @@ function InputBalanceModal({
     formState: { errors },
     clearErrors,
     resetField,
-    getValues,
   } = useForm<InputBalanceForm>();
   const { ref, ...rest } = register('amount', {
     required: 'Masukkan balance (sisa uang)',
@@ -64,22 +64,23 @@ function InputBalanceModal({
     year,
     month,
     week,
-    date,
     onClose,
     resetField,
-    setErrorMessage,
   });
   const { account } = useAuthContext();
 
   function onValid(data: InputBalanceForm) {
+    if (data.amount === 0) {
+      resetField('amount');
+      onClose();
+      return;
+    }
     mutate({ userId: account?.id, amount: data.amount, year, month, date });
   }
 
   useEffect(() => {
     if (!isOpen) return;
-    if (isNaN(getValues('amount'))) {
-      resetField('amount');
-    }
+    resetField('amount');
   }, [isOpen]);
 
   return (
@@ -88,7 +89,6 @@ function InputBalanceModal({
       isOpen={isOpen}
       onClose={() => {
         clearErrors();
-        setErrorMessage('');
         onClose();
       }}
       isCentered>
@@ -104,19 +104,19 @@ function InputBalanceModal({
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <FormControl isInvalid={!!errorMessage || !!errors.amount}>
+          <FormControl isInvalid={!!errors.amount}>
             <FormLabel>Amount</FormLabel>
             <NumberInput
-              defaultValue={0}
+              defaultValue={balance}
               min={0}
               step={100}
               onKeyUp={(e) => {
                 if (e.key === 'Enter') handleSubmit(onValid)();
               }}>
               <NumberInputField
-                ref={(e) => {
-                  ref(e);
-                  initialRef.current = e;
+                ref={(props) => {
+                  ref(props);
+                  initialRef.current = props;
                 }}
                 {...rest}
               />
@@ -125,9 +125,7 @@ function InputBalanceModal({
                 <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
-            <FormErrorMessage>
-              {errorMessage || errors.amount?.message}
-            </FormErrorMessage>
+            <FormErrorMessage>{errors.amount?.message}</FormErrorMessage>
           </FormControl>
         </ModalBody>
         <ModalFooter>
