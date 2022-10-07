@@ -21,15 +21,26 @@ export const BalanceModel = {
     year: Type.Integer({ minimum: 1970 }),
     month: Type.Integer({ minimum: 1, maximum: 12 }),
     date: Type.Integer({ minimum: 1, maximum: 31 }),
-    createdAt: Type.Optional(Type.String({ format: 'time' })),
   },
   response: {
-    userId: Type.String(),
     amount: Type.Integer(),
     year: Type.Integer(),
     month: Type.Integer(),
     date: Type.Integer(),
-    createdAt: Type.Integer(),
+  },
+};
+
+export const MonthlyBalanceModel = {
+  validation: {
+    userId: Type.RegEx(/^c[^\s-]{8,}$/),
+    amount: Type.Integer({ minimum: 0 }),
+    year: Type.Integer({ minimum: 1970 }),
+    month: Type.Integer({ minimum: 1, maximum: 12 }),
+  },
+  response: {
+    amount: Type.Integer(),
+    year: Type.Integer(),
+    month: Type.Integer(),
   },
 };
 

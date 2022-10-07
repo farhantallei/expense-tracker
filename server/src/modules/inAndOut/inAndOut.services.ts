@@ -26,6 +26,19 @@ export async function getBalances(
   );
 }
 
+export async function getMonthlyBalance(
+  reply: FastifyReply,
+  userId_year_month: { userId: string; year: number; month: number }
+) {
+  return await commitToDB(
+    prisma.monthlyBalance.findUnique({
+      where: { userId_year_month },
+      select: { amount: true },
+    }),
+    reply
+  );
+}
+
 export async function getInAndOut(
   reply: FastifyReply,
   {
@@ -109,6 +122,16 @@ export async function createInAndOut(
   );
 }
 
+export async function deleteInAndOut(
+  reply: FastifyReply,
+  { id }: { id: string }
+) {
+  return await commitToDB(
+    prisma.inAndOut.delete({ where: { id }, select: null }),
+    reply
+  );
+}
+
 export async function checkBalance(
   reply: FastifyReply,
   {
@@ -129,6 +152,24 @@ export async function checkBalance(
   ).then((val) => !!val);
 }
 
+export async function checkMonthlyBalance(
+  reply: FastifyReply,
+  {
+    userId,
+    year,
+    month,
+  }: {
+    userId: string;
+    year: number;
+    month: number;
+  }
+) {
+  return await commitToDB(
+    prisma.monthlyBalance.count({ where: { userId, year, month } }),
+    reply
+  ).then((val) => !!val);
+}
+
 export async function inputBalance(
   reply: FastifyReply,
   data: {
@@ -140,6 +181,18 @@ export async function inputBalance(
   }
 ) {
   return await commitToDB(prisma.balance.create({ data }), reply);
+}
+
+export async function inputMonthlyBalance(
+  reply: FastifyReply,
+  data: {
+    userId: string;
+    amount: number;
+    year: number;
+    month: number;
+  }
+) {
+  return await commitToDB(prisma.monthlyBalance.create({ data }), reply);
 }
 
 export async function updateBalance(
@@ -163,6 +216,58 @@ export async function updateBalance(
       where: { userId_year_month_date: { userId, year, month, date } },
       data: { userId, amount, year, month, date },
     }),
+    reply
+  );
+}
+
+export async function updateMonthlyBalance(
+  reply: FastifyReply,
+  {
+    userId,
+    amount,
+    year,
+    month,
+  }: {
+    userId: string;
+    amount: number;
+    year: number;
+    month: number;
+  }
+) {
+  return await commitToDB(
+    prisma.monthlyBalance.update({
+      where: { userId_year_month: { userId, year, month } },
+      data: { userId, amount, year, month },
+    }),
+    reply
+  );
+}
+
+export async function deleteBalance(
+  reply: FastifyReply,
+  userId_year_month_date: {
+    userId: string;
+    year: number;
+    month: number;
+    date: number;
+  }
+) {
+  return await commitToDB(
+    prisma.balance.delete({ where: { userId_year_month_date } }),
+    reply
+  );
+}
+
+export async function deleteMonthlyBalance(
+  reply: FastifyReply,
+  userId_year_month: {
+    userId: string;
+    year: number;
+    month: number;
+  }
+) {
+  return await commitToDB(
+    prisma.monthlyBalance.delete({ where: { userId_year_month } }),
     reply
   );
 }

@@ -1,5 +1,10 @@
 import { Type } from '@sinclair/typebox';
-import { BalanceModel, InAndOutModel, UserModel } from '../../models';
+import {
+  BalanceModel,
+  InAndOutModel,
+  MonthlyBalanceModel,
+  UserModel,
+} from '../../models';
 
 export const GetInAndOutListSchema = {
   querystring: Type.Object({
@@ -52,6 +57,12 @@ export const CreateInAndOutSchema = {
 
 export type CreateInAndOutTSchema = typeof CreateInAndOutSchema;
 
+export const DeleteInAndOutSchema = {
+  params: Type.Object({ id: InAndOutModel.validation.id }),
+};
+
+export type DeleteInAndOutTSchema = typeof DeleteInAndOutSchema;
+
 export const InputBalanceSchema = {
   querystring: Type.Object({ userId: UserModel.validation.id }),
   body: Type.Object({
@@ -66,3 +77,30 @@ export const InputBalanceSchema = {
 };
 
 export type InputBalanceTSchema = typeof InputBalanceSchema;
+
+export const GetMonthlyBalanceSchema = {
+  querystring: Type.Object({
+    userId: UserModel.validation.id,
+    year: MonthlyBalanceModel.validation.year,
+    month: MonthlyBalanceModel.validation.month,
+  }),
+  response: {
+    200: Type.Object({ amount: MonthlyBalanceModel.response.amount }),
+  },
+};
+
+export type GetMonthlyBalanceTSchema = typeof GetMonthlyBalanceSchema;
+
+export const InputMonthlyBalanceSchema = {
+  querystring: Type.Object({ userId: UserModel.validation.id }),
+  body: Type.Object({
+    amount: MonthlyBalanceModel.validation.amount,
+    year: MonthlyBalanceModel.validation.year,
+    month: MonthlyBalanceModel.validation.month,
+  }),
+  response: {
+    200: Type.Object(MonthlyBalanceModel.response),
+  },
+};
+
+export type InputMonthlyBalanceTSchema = typeof InputMonthlyBalanceSchema;

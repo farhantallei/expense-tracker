@@ -1,6 +1,8 @@
 import {
   Badge,
   Button,
+  ButtonGroup,
+  Center,
   Flex,
   Modal,
   ModalBody,
@@ -9,9 +11,12 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Skeleton,
+  Text,
 } from '@chakra-ui/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { useInAndOutByDate } from '../../hooks';
 import { GetInAndOutListResponse } from '../../services/inAndOut';
 import MoneyStatus from '../MoneyStatus';
 import { Item } from './components';
@@ -24,6 +29,7 @@ interface InAndOutModalProps {
   week: number;
   date: number;
   onBalance?: () => void;
+  onInput?: () => void;
 }
 
 function InAndOutModal({
@@ -34,41 +40,49 @@ function InAndOutModal({
   week,
   date,
   onBalance,
+  onInput,
 }: InAndOutModalProps) {
   const queryClient = useQueryClient();
-  const data = queryClient.getQueryData<GetInAndOutListResponse[]>([
+  const inAndOutList = queryClient.getQueryData<GetInAndOutListResponse[]>([
     'in and out',
     { year, month, week },
   ]);
 
   const balance = useMemo((): number | undefined => {
-    if (!data) return;
-    const idx = data.findIndex((item) => item.date === date);
-    return data[idx]?.balance;
-  }, [data, month, date]);
+    if (!inAndOutList) return;
+    const idx = inAndOutList.findIndex((item) => item.date === date);
+    return inAndOutList[idx]?.balance;
+  }, [inAndOutList, month, date]);
 
   const income = useMemo((): number | undefined => {
-    if (!data) return;
-    const idx = data.findIndex((item) => item.date === date);
-    return data[idx]?.income;
-  }, [data, month, date]);
+    if (!inAndOutList) return;
+    const idx = inAndOutList.findIndex((item) => item.date === date);
+    return inAndOutList[idx]?.income;
+  }, [inAndOutList, month, date]);
 
   const expense = useMemo((): number | undefined => {
-    if (!data) return;
-    const idx = data.findIndex((item) => item.date === date);
-    return data[idx]?.expense;
-  }, [data, month, date]);
+    if (!inAndOutList) return;
+    const idx = inAndOutList.findIndex((item) => item.date === date);
+    return inAndOutList[idx]?.expense;
+  }, [inAndOutList, month, date]);
 
   const loss = useMemo((): number | undefined => {
     if (income == null || expense == null || balance == null) return;
-    return Math.max((income - expense - balance) * -1, 0);
-  }, [data, month, date]);
+    return Math.max(income - expense - balance, 0);
+  }, [inAndOutList, month, date]);
+
+  const { data, isLoading, isSuccess, isError, error } = useInAndOutByDate(
+    year,
+    month,
+    week,
+    date
+  );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>1/9/2022</ModalHeader>
+        <ModalHeader>{`${date}/${month}/${year}`}</ModalHeader>
         <ModalCloseButton />
         <Flex
           gap={2}
@@ -101,17 +115,45 @@ function InAndOutModal({
           />
         </Flex>
         <ModalBody display="flex" flexDirection="column" py={6} gap={4}>
-          <Item />
-          <Item />
-          <Item />
-          <Item />
-          <Item />
-          <Item />
+          {isLoading ? (
+            <>
+              <Skeleton height={205} borderRadius="lg" isLoaded={!isLoading} />
+              <Skeleton height={205} borderRadius="lg" isLoaded={!isLoading} />
+              <Skeleton height={205} borderRadius="lg" isLoaded={!isLoading} />
+            </>
+          ) : isError ? (
+            <Center>
+              <Text fontSize="2xl" fontWeight="semibold" color="red">
+                {error instanceof Error
+                  ? error.message
+                  : 'Something goes wrong. Please refresh your page.'}
+              </Text>
+            </Center>
+          ) : isSuccess ? (
+            data.map((item) => (
+              <Item
+                id={item.id}
+                name={item.name}
+                type={item.type}
+                amount={item.amount}
+                description={item.description}
+                year={item.year}
+                month={item.month}
+                week={week}
+                date={item.date}
+              />
+            ))
+          ) : null}
         </ModalBody>
         <ModalFooter borderTopWidth="1px">
-          <Button colorScheme="orange" onClick={onBalance}>
-            Balance
-          </Button>
+          <ButtonGroup>
+            <Button size="sm" colorScheme="purple" onClick={onBalance}>
+              Balance
+            </Button>
+            <Button size="sm" colorScheme="messenger" onClick={onInput}>
+              Input
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

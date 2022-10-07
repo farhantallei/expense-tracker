@@ -5,8 +5,11 @@ import {
   StatNumber,
   useMediaQuery,
 } from '@chakra-ui/react';
+import { formatCurrency } from '../utils';
 
 interface MoneyStatusProps {
+  date?: number;
+  monthlyBalance: number;
   balance: number;
   loss: number;
   income: number;
@@ -15,6 +18,8 @@ interface MoneyStatusProps {
 }
 
 function MoneyStatus({
+  date,
+  monthlyBalance,
   balance,
   loss,
   income,
@@ -26,7 +31,9 @@ function MoneyStatus({
       <MoneyStat
         label="Calculation"
         color="gray.500"
-        number={income - expense}
+        number={
+          date === 1 ? monthlyBalance + income - expense : income - expense
+        }
         isLoading={isLoading}
       />
       <MoneyStat
@@ -74,7 +81,7 @@ function MoneyStat({
       <StatLabel>{label}</StatLabel>
       <StatNumber color={color} fontSize={isLargerThan640 ? 'xl' : 'sm'}>
         <Skeleton height={30} mr={4} isLoaded={!isLoading}>
-          {`Rp ${number}`}
+          {formatCurrency(number)}
         </Skeleton>
       </StatNumber>
     </Stat>

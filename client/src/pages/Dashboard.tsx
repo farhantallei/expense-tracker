@@ -6,8 +6,10 @@ import {
   Container,
   Flex,
   Grid,
+  GridItem,
   Heading,
   IconButton,
+  Skeleton,
   Spacer,
   Text,
   useDisclosure,
@@ -18,18 +20,20 @@ import {
   InAndOutList,
   InAndOutModal,
   InputBalanceModal,
-  InputIncomeModal,
+  InputInAndOutModal,
   MoneyStatus,
 } from '../components';
 import { useAuthContext } from '../context/AuthContext';
 import { useInAndOutList } from '../hooks';
+import useMonthlyBalance from '../hooks/useMonthlyBalance';
 import { GetInAndOutListResponse } from '../services/inAndOut';
-import { range } from '../utils';
+import { formatCurrency, range } from '../utils';
 
 function Dashboard() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [currentDate, setCurrentDate] = useState(0);
+  const [currentDate, setCurrentDate] = useState(1);
+  const [currentMonthlyBalance, setCurrentMonthlyBalance] = useState(0);
   const [currentBalance, setCurrentBalance] = useState(0);
   const moduloMonth = useMemo((): number => {
     const modMonth = ((currentMonth % 12) + 12) % 12;
@@ -63,14 +67,19 @@ function Dashboard() {
     onClose: onInAndOutModalClose,
   } = useDisclosure();
   const {
+    isOpen: isInputInAndOutModalOpen,
+    onOpen: onInputInAndOutModalOpen,
+    onClose: onInputInAndOutModalClose,
+  } = useDisclosure();
+  const {
+    isOpen: isInputMonthlyBalanceModalOpen,
+    onOpen: onInputMonthlyBalanceModalOpen,
+    onClose: onInputMonthlyBalanceModalClose,
+  } = useDisclosure();
+  const {
     isOpen: isInputBalanceModalOpen,
     onOpen: onInputBalanceModalOpen,
     onClose: onInputBalanceModalClose,
-  } = useDisclosure();
-  const {
-    isOpen: isInputIncomeModalOpen,
-    onOpen: onInputIncomeModalOpen,
-    onClose: onInputIncomeModalClose,
   } = useDisclosure();
   const { account, setIsAuthenticated, setAccount } = useAuthContext();
   const navigate = useNavigate();
@@ -82,6 +91,14 @@ function Dashboard() {
     currentWeek
   );
 
+  const {
+    data: monthlyBalanceData,
+    isLoading: isMonthlyBalanceLoading,
+    isSuccess: isMonthlyBalanceSuccess,
+    isError: isMonthlyBalanceError,
+    error: monthlyBalanceError,
+  } = useMonthlyBalance(currentYear, moduloMonth);
+
   const totalBalance = useMemo(
     (): number =>
       data?.reduce((currentTotal, item) => item.balance + currentTotal, 0) || 0,
@@ -92,8 +109,7 @@ function Dashboard() {
     (): number =>
       data?.reduce(
         (currentTotal, item) =>
-          Math.max((item.income - item.expense - item.balance) * -1, 0) +
-          currentTotal,
+          Math.max(item.income - item.expense - item.balance, 0) + currentTotal,
         0
       ) || 0,
     [data, isLoading, currentMonth]
@@ -182,21 +198,61 @@ function Dashboard() {
         />
       </Grid>
       {/* Pagination */}
-      <Flex flexDirection="column" alignItems="center" marginTop={4} gap={2}>
-        <Text color="gray.700" fontWeight="semibold">
-          Week
-        </Text>
-        <ButtonGroup size="sm" isAttached variant="outline">
-          {range(1, totalWeek).map((number) => (
-            <Button
-              key={number}
-              isActive={number === currentWeek}
-              onClick={() => setCurrentWeek(number)}>
-              {number}
-            </Button>
-          ))}
-        </ButtonGroup>
-      </Flex>
+      <Grid templateColumns="0.5fr 1fr 0.5fr">
+        <GridItem display="flex" flexDirection="column" marginTop={4} gap={2}>
+          <Text color="gray.700" fontWeight="semibold">
+            Saldo awal bulan:
+          </Text>
+          <Skeleton height={30} mr={4} isLoaded={!isMonthlyBalanceLoading}>
+            {isMonthlyBalanceError ? (
+              <Text fontSize="xl" fontWeight="semibold" color="red.500">
+                {monthlyBalanceError instanceof Error
+                  ? monthlyBalanceError.message
+                  : 'Error'}
+              </Text>
+            ) : isMonthlyBalanceSuccess ? (
+              <Text fontSize="xl" fontWeight="semibold" color="yellow.400">
+                {formatCurrency(monthlyBalanceData.amount)}
+              </Text>
+            ) : null}
+          </Skeleton>
+        </GridItem>
+        <GridItem
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          marginTop={4}
+          gap={2}>
+          <Text color="gray.700" fontWeight="semibold">
+            Week
+          </Text>
+          <ButtonGroup size="sm" isAttached variant="outline">
+            {range(1, totalWeek).map((number) => (
+              <Button
+                key={number}
+                isActive={number === currentWeek}
+                onClick={() => setCurrentWeek(number)}>
+                {number}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </GridItem>
+        <GridItem
+          display="flex"
+          justifyContent="flex-end"
+          alignItems="flex-end">
+          <Button
+            size="sm"
+            colorScheme="yellow"
+            onClick={() => {
+              if (monthlyBalanceData)
+                setCurrentMonthlyBalance(monthlyBalanceData.amount);
+              onInputMonthlyBalanceModalOpen();
+            }}>
+            Monthly Balance
+          </Button>
+        </GridItem>
+      </Grid>
       {/* Stat */}
       <Flex
         position="sticky"
@@ -207,13 +263,13 @@ function Dashboard() {
         paddingBottom={4}
         zIndex={10}
         borderBottomWidth="1px">
-        <MoneyStatus
+        {/* <MoneyStatus
           balance={totalBalance}
           loss={totalLoss}
           income={totalIncome}
           expense={totalExpense}
           isLoading={isLoading}
-        />
+        /> */}
       </Flex>
       {/* List */}
       <InAndOutList isLoading={isLoading} isError={isError} error={error}>
@@ -227,13 +283,13 @@ function Dashboard() {
                 balance={item.balance}
                 income={item.income}
                 expense={item.expense}
-                onIncome={() => {
-                  setValue(item);
-                  onInputIncomeModalOpen();
-                }}
                 onBalance={() => {
                   setValue(item);
                   onInputBalanceModalOpen();
+                }}
+                onInput={() => {
+                  setValue(item);
+                  onInputInAndOutModalOpen();
                 }}
                 onView={() => {
                   setValue(item);
@@ -251,19 +307,31 @@ function Dashboard() {
         week={currentWeek}
         date={currentDate}
         onBalance={onInputBalanceModalOpen}
+        onInput={onInputInAndOutModalOpen}
+      />
+      <InputBalanceModal
+        isOpen={isInputMonthlyBalanceModalOpen}
+        onClose={onInputMonthlyBalanceModalClose}
+        monthly={true}
+        year={currentYear}
+        month={moduloMonth}
+        week={currentWeek}
+        date={currentDate}
+        balance={currentMonthlyBalance}
       />
       <InputBalanceModal
         isOpen={isInputBalanceModalOpen}
         onClose={onInputBalanceModalClose}
+        monthly={false}
         year={currentYear}
         month={moduloMonth}
         week={currentWeek}
         date={currentDate}
         balance={currentBalance}
       />
-      <InputIncomeModal
-        isOpen={isInputIncomeModalOpen}
-        onClose={onInputIncomeModalClose}
+      <InputInAndOutModal
+        isOpen={isInputInAndOutModalOpen}
+        onClose={onInputInAndOutModalClose}
         year={currentYear}
         month={moduloMonth}
         week={currentWeek}

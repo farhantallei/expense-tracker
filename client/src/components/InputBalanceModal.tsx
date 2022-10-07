@@ -16,14 +16,16 @@ import {
   NumberInputField,
   NumberInputStepper,
 } from '@chakra-ui/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuthContext } from '../context/AuthContext';
-import { useInputBalance } from '../hooks';
+import { useInputBalance, useInputMonthlyBalance } from '../hooks';
+import { formatCurrency } from '../utils';
 
 interface InputBalanceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  monthly: boolean;
   year: number;
   month: number;
   week: number;
@@ -32,25 +34,26 @@ interface InputBalanceModalProps {
 }
 
 interface InputBalanceForm {
-  amount: number;
+  amount: string;
 }
 
 function InputBalanceModal({
   isOpen,
   onClose,
+  monthly,
   year,
   month,
   week,
   date,
   balance = 0,
 }: InputBalanceModalProps) {
+  const [amountValue, setAmountValue] = useState(balance);
   const initialRef = useRef<HTMLInputElement | null>(null);
   const {
     register,
     handleSubmit,
     formState: { errors },
     clearErrors,
-    resetField,
   } = useForm<InputBalanceForm>();
   const { ref, ...rest } = register('amount', {
     required: 'Masukkan balance (sisa uang)',
@@ -58,29 +61,55 @@ function InputBalanceModal({
       value: 0,
       message: 'Minimal 0',
     },
-    valueAsNumber: true,
   });
-  const { mutate, isLoading } = useInputBalance({
+  const { mutate: inputBalanceMutate, isLoading: isInputBalanceLoading } =
+    useInputBalance({
+      year,
+      month,
+      week,
+      onClose,
+      resetField,
+    });
+  const {
+    mutate: inputMonthlyBalanceMutate,
+    isLoading: isInputMonthlyBalanceLoading,
+  } = useInputMonthlyBalance({
     year,
     month,
-    week,
     onClose,
     resetField,
   });
+
   const { account } = useAuthContext();
 
-  function onValid(data: InputBalanceForm) {
-    if (data.amount === 0) {
-      resetField('amount');
-      onClose();
-      return;
-    }
-    mutate({ userId: account?.id, amount: data.amount, year, month, date });
+  function onValid() {
+    if (monthly)
+      return inputMonthlyBalanceMutate({
+        userId: account?.id,
+        amount: amountValue,
+        year,
+        month,
+      });
+    inputBalanceMutate({
+      userId: account?.id,
+      amount: amountValue,
+      year,
+      month,
+      date,
+    });
+  }
+
+  function parse(value: string) {
+    return parseInt(value.replace(/\,/, ''));
+  }
+
+  function resetField() {
+    setAmountValue(0);
   }
 
   useEffect(() => {
     if (!isOpen) return;
-    resetField('amount');
+    setAmountValue(balance);
   }, [isOpen]);
 
   return (
@@ -107,7 +136,12 @@ function InputBalanceModal({
           <FormControl isInvalid={!!errors.amount}>
             <FormLabel>Amount</FormLabel>
             <NumberInput
-              defaultValue={balance}
+              onChange={(valueString) => {
+                if (!valueString) return setAmountValue(0);
+                setAmountValue(parse(valueString));
+              }}
+              defaultValue={formatCurrency(amountValue)}
+              value={formatCurrency(amountValue)}
               min={0}
               step={100}
               onKeyUp={(e) => {
@@ -133,7 +167,9 @@ function InputBalanceModal({
             size="sm"
             colorScheme="blue"
             onClick={handleSubmit(onValid)}
-            isLoading={isLoading}>
+            isLoading={
+              monthly ? isInputMonthlyBalanceLoading : isInputBalanceLoading
+            }>
             Submit
           </Button>
         </ModalFooter>

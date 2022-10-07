@@ -11,24 +11,34 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  username     String     @unique
-  passwordHash String
-  createdAt    DateTime   @default(now())
-  balance      Balance[]
-  inAndOut     InAndOut[]
+  id             String           @id @default(cuid())
+  username       String           @unique
+  passwordHash   String
+  createdAt      DateTime         @default(now())
+  balance        Balance[]
+  monthlyBalance MonthlyBalance[]
+  inAndOut       InAndOut[]
 }
 
 model Balance {
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  amount    Int      @default(0)
-  year      Int      @db.SmallInt
-  month     Int      @db.SmallInt
-  date      Int      @db.SmallInt
-  createdAt DateTime @default(now()) @db.Time()
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  amount Int    @default(0)
+  year   Int    @db.SmallInt
+  month  Int    @db.SmallInt
+  date   Int    @db.SmallInt
 
   @@id([userId, year, month, date])
+}
+
+model MonthlyBalance {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  amount Int    @default(0)
+  year   Int    @db.SmallInt
+  month  Int    @db.SmallInt
+
+  @@id([userId, year, month])
 }
 
 enum InAndOutType {

@@ -1,8 +1,8 @@
 import { useToast } from '@chakra-ui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { inputBalance } from '../services/inAndOut';
+import { createInAndOut } from '../services/inAndOut';
 
-interface InputBalanceParams {
+interface InputInAndOutParams {
   year: number;
   month: number;
   week: number;
@@ -10,18 +10,18 @@ interface InputBalanceParams {
   resetField: () => void;
 }
 
-function useInputBalance({
+function useInputInAndOut({
   year,
   month,
   week,
   onClose,
   resetField,
-}: InputBalanceParams) {
+}: InputInAndOutParams) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: inputBalance,
+    mutationFn: createInAndOut,
     onSuccess: () => {
       onClose();
       resetField();
@@ -43,4 +43,4 @@ function useInputBalance({
   });
 }
 
-export default useInputBalance;
+export default useInputInAndOut;

@@ -9,7 +9,8 @@ function useInAndOutList(
   week: number
 ) {
   const { account } = useAuthContext();
-  return useQuery(['in and out', { year, month, week }], {
+  return useQuery({
+    queryKey: ['in and out', { year, month, week }],
     queryFn: () =>
       getInAndOutList({ userId: account?.id, totalDays, year, month, week }),
   });
